@@ -1,6 +1,37 @@
 import sys
 
 
+class MemoryBuffer:
+
+    def __init__(self, size: int):
+        self.pool = [0] * size
+        self.ptr = 0
+
+    def increment_ptr(self):
+        self.ptr += 1
+
+    def decrement_ptr(self):
+        self.ptr -= 1
+
+    def increment(self):
+        self.pool[self.ptr] += 1
+
+    def decrement(self):
+        self.pool[self.ptr] -= 1
+
+    def current(self) -> int:
+        return self.pool[self.ptr]
+
+    def store(self, val: int):
+        self.pool[self.ptr] = val
+
+    def dump(self, start, end) -> list:
+        return self.pool[start:end]
+
+    def __str__(self):
+        return f"ptr: {self.ptr}, Value:{self.current()}"
+
+
 def execute(file):
     f = open(file, "r")
     output = evaluate(f.read())
