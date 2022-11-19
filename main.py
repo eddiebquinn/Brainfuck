@@ -1,82 +1,147 @@
 import sys
 
 
-def execute(file):
-    f = open(file, "r")
-    output = evaluate(f.read())
-    f.close()
+class MemoryBuffer:
 
-    output = "".join(x for x in output)
-    print(output)
+    def __init__(self, size: int = 30000):
+        self.pool = [0] * size
+        self.ptr = 0
 
+    def increment_ptr(self):
+        # Potential error point if ptr goes beyond array
+        self.ptr += 1
 
-def evaluate(code):
-    code = cleanup(list(code))
-    loop_map = build_loopMap(code)
-    output = []
+    def decrement_ptr(self):
+        self.ptr = 0 if self.ptr <= 0 else self.ptr - 1
 
-    mem, codeptr, memptr = [0], 0, 0
+    def increment(self):
+        self.pool[self.ptr] = self.pool[self.ptr] + \
+            1 if self.pool[self.ptr] < 255 else 0
 
-    while codeptr < len(code):
-        command = code[codeptr]
-        print(command)
+    def decrement(self):
+        self.pool[self.ptr] = self.pool[self.ptr] - \
+            1 if self.pool[self.ptr] > 0 else 255
 
-        if command == ">":
-            memptr += 1
-            if memptr == len(mem):
-                mem.append(0)
+    def current(self) -> int:
+        return self.pool[self.ptr]
 
-        if command == "<":
-            memptr = 0 if memptr <= 0 else memptr - 1
+    def store(self, val: int):
+        self.pool[self.ptr] = val
 
-        if command == "+":
-            mem[memptr] = mem[memptr] + 1 if mem[memptr] < 255 else 0
+    def dump(self, start, end) -> list:
+        return self.pool[start:end]
 
-        if command == "-":
-            mem[memptr] = mem[memptr] - 1 if mem[memptr] > 0 else 255
-
-        if command == "[" and mem[memptr] == 0:
-            codeptr = loop_map[codeptr]
-
-        if command == "]" and mem[memptr] != 0:
-            codeptr = loop_map[codeptr]
-
-        if command == ".":
-            raw_output = mem[memptr]
-            output.append(chr(mem[memptr]))
-
-        if command == ",":
-            i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
-            mem[memptr] = int(i)
-
-        codeptr += 1
-
-    return output
+    def __str__(self):
+        return f"ptr: {self.ptr}, Value:{self.current()}"
 
 
-def cleanup(raw_code):
-    clean_code = "".join(x for x in raw_code if x in [
-        '.', ',', '[', ']', '<', '>', '+', '-'])
-    return clean_code
+class Program:
+
+    def __init__(self, program: str):
+        self.program = self.__extract_code(program)
+        self.pos = 0
+        self.loop_map = self.__build_loop_map()
+
+    def __extract_code(self, file):
+        f = open(file, "r")
+        code = "".join(x for x in f.read() if x in [
+            '.', ',', '[', ']', '<', '>', '+', '-'])
+        f.close()
+        return code
+
+    def __build_loop_map(self):
+        # This is also a error point because it doesnt know how to cope with nested loops
+        temp_loopstack, loopmap = [], {}
+        for position, command in enumerate(self.program):
+            if command == "[":
+                temp_loopstack.append(position)
+            if command == "]":
+                start = temp_loopstack.pop()
+                loopmap[start] = position
+                loopmap[position] = start
+        return loopmap
+
+    def advance(self, n=1):
+        self.pos += n
+
+    def current(self) -> str:
+        return self.program[self.pos]
+
+    def eof(self) -> bool:
+        return self.pos == len(self.program)
+
+    def __str__(self):
+        return f"position: {self.pos}, Command: {self.current()}"
 
 
-def build_loopMap(code):
-    temp_loopstack, loopmap = [], {}
-    for position, command in enumerate(code):
-        if command == "[":
-            temp_loopstack.append(position)
-        if command == "]":
-            start = temp_loopstack.pop()
-            loopmap[start] = position
-            loopmap[position] = start
-    return loopmap
+class Interpreter:
+
+    def __init__(self, program: Program, buffer: MemoryBuffer):
+        self.program = program
+        self.mem = buffer
+
+        self.output = []
+
+    def __inc_ptr(self):
+        self.mem.increment_ptr()
+
+    def __dec_ptr(self):
+        self.mem.decrement_ptr()
+
+    def __inc_byte(self):
+        self.mem.increment()
+
+    def __dec_byte(self):
+        self.mem.decrement()
+
+    def __jump_forward(self):
+        if self.mem.current() == 0:
+            self.program.pos = self.program.loop_map[self.program.pos]
+
+    def __jump_backward(self):
+        if self.mem.current() != 0:
+            self.program.pos = self.program.loop_map[self.program.pos]
+
+    def __output_byte(self):
+        self.output.append(chr(self.mem.current()))
+
+    def __input_byte(self):
+        i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
+        self.mem.store(i)
+
+    def evaluate(self):
+        cmd_dict = {
+            ">": self.__inc_ptr,
+            "<": self.__dec_ptr,
+            "+": self.__inc_byte,
+            "-": self.__dec_byte,
+            ".": self.__output_byte,
+            ",": self.__input_byte,
+            "[": self.__jump_forward,
+            "]": self.__jump_backward
+        }
+
+        while not self.program.eof():
+            cmd = cmd_dict.get(self.program.current())
+            if cmd:
+                cmd()
+            self.program.advance()
+
+        return self.output
 
 
 def main():
     if len(sys.argv) <= 1:
         print("Please provide file ending with .bf to evaluate")
         return
-    execute(sys.argv[1])
+
+    program = Program(sys.argv[1])
+    buffer = MemoryBuffer(30000)
+    interpreter = Interpreter(program=program, buffer=buffer)
+    output = interpreter.evaluate()
+
+    output = "".join(x for x in output)
+    print(output)
 
 
 if __name__ == "__main__":
