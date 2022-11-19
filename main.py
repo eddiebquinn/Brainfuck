@@ -3,21 +3,24 @@ import sys
 
 class MemoryBuffer:
 
-    def __init__(self, size: int):
+    def __init__(self, size: int = 30000):
         self.pool = [0] * size
         self.ptr = 0
 
     def increment_ptr(self):
+        # Potential error point if ptr goes beyond array
         self.ptr += 1
 
     def decrement_ptr(self):
-        self.ptr -= 1
+        self.ptr = 0 if self.ptr <= 0 else self.ptr - 1
 
     def increment(self):
-        self.pool[self.ptr] += 1
+        self.pool[self.ptr] = self.pool[self.ptr] + \
+            1 if self.pool[self.ptr] < 255 else 0
 
     def decrement(self):
-        self.pool[self.ptr] -= 1
+        self.pool[self.ptr] = self.pool[self.ptr] - \
+            1 if self.pool[self.ptr] > 0 else 255
 
     def current(self) -> int:
         return self.pool[self.ptr]
@@ -46,39 +49,36 @@ def evaluate(code):
     loop_map = build_loopMap(code)
     output = []
 
-    mem, codeptr, memptr = [0], 0, 0
+    mem, codeptr, = MemoryBuffer(), 0
 
     while codeptr < len(code):
         command = code[codeptr]
         print(command)
 
         if command == ">":
-            memptr += 1
-            if memptr == len(mem):
-                mem.append(0)
+            mem.increment_ptr()
 
         if command == "<":
-            memptr = 0 if memptr <= 0 else memptr - 1
+            mem.decrement_ptr()
 
         if command == "+":
-            mem[memptr] = mem[memptr] + 1 if mem[memptr] < 255 else 0
+            mem.increment()
 
         if command == "-":
-            mem[memptr] = mem[memptr] - 1 if mem[memptr] > 0 else 255
+            mem.decrement()
 
-        if command == "[" and mem[memptr] == 0:
+        if command == "[" and mem.current() == 0:
             codeptr = loop_map[codeptr]
 
-        if command == "]" and mem[memptr] != 0:
+        if command == "]" and mem.current() != 0:
             codeptr = loop_map[codeptr]
 
         if command == ".":
-            raw_output = mem[memptr]
-            output.append(chr(mem[memptr]))
+            output.append(chr(mem.current()))
 
         if command == ",":
             i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
-            mem[memptr] = int(i)
+            mem.store(i)
 
         codeptr += 1
 
