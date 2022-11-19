@@ -38,8 +38,28 @@ class MemoryBuffer:
 class Program:
 
     def __init__(self, program: str):
-        self.program = program
+        self.program = self.__extract_code(program)
         self.pos = 0
+        self.loop_map = self.__build_loop_map()
+
+    def __extract_code(self, file):
+        f = open(file, "r")
+        code = "".join(x for x in f.read() if x in [
+            '.', ',', '[', ']', '<', '>', '+', '-'])
+        f.close()
+        return code
+
+    def __build_loop_map(self):
+        # This is also a error point because it doesnt know how to cope with nested loops
+        temp_loopstack, loopmap = [], {}
+        for position, command in enumerate(self.program):
+            if command == "[":
+                temp_loopstack.append(position)
+            if command == "]":
+                start = temp_loopstack.pop()
+                loopmap[start] = position
+                loopmap[position] = start
+        return loopmap
 
     def advance(self, n=1):
         self.pos += n
@@ -56,10 +76,9 @@ class Program:
 
 class Interpreter:
 
-    def __init__(self, program: Program, buffer: MemoryBuffer, loop_map: dict):
+    def __init__(self, program: Program, buffer: MemoryBuffer):
         self.program = program
         self.mem = buffer
-        self.loop_map = loop_map
 
         self.output = []
 
@@ -77,11 +96,11 @@ class Interpreter:
 
     def __jump_forward(self):
         if self.mem.current() == 0:
-            self.program.pos = self.loop_map[self.program.pos]
+            self.program.pos = self.program.loop_map[self.program.pos]
 
     def __jump_backward(self):
         if self.mem.current() != 0:
-            self.program.pos = self.loop_map[self.program.pos]
+            self.program.pos = self.program.loop_map[self.program.pos]
 
     def __output_byte(self):
         self.output.append(chr(self.mem.current()))
@@ -111,51 +130,18 @@ class Interpreter:
         return self.output
 
 
-def execute(file):
-    f = open(file, "r")
-    output = evaluate(f.read())
-    f.close()
-
-    output = "".join(x for x in output)
-    print(output)
-
-
-def evaluate(code):
-    code = cleanup(list(code))
-    loop_map = build_loopMap(code)
-
-    program = Program(code)
-    buffer = MemoryBuffer(30000)
-    interpreter = Interpreter(
-        program=program, buffer=buffer, loop_map=loop_map)
-    output = interpreter.evaluate()
-
-    return output
-
-
-def cleanup(raw_code):
-    clean_code = "".join(x for x in raw_code if x in [
-        '.', ',', '[', ']', '<', '>', '+', '-'])
-    return clean_code
-
-
-def build_loopMap(code):
-    temp_loopstack, loopmap = [], {}
-    for position, command in enumerate(code):
-        if command == "[":
-            temp_loopstack.append(position)
-        if command == "]":
-            start = temp_loopstack.pop()
-            loopmap[start] = position
-            loopmap[position] = start
-    return loopmap
-
-
 def main():
     if len(sys.argv) <= 1:
         print("Please provide file ending with .bf to evaluate")
         return
-    execute(sys.argv[1])
+
+    program = Program(sys.argv[1])
+    buffer = MemoryBuffer(30000)
+    interpreter = Interpreter(program=program, buffer=buffer)
+    output = interpreter.evaluate()
+
+    output = "".join(x for x in output)
+    print(output)
 
 
 if __name__ == "__main__":
