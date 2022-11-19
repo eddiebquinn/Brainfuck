@@ -90,14 +90,14 @@ class Interpreter:
 
     def evaluate(self):
         cmd_dict = {
-            ">": self.__inc_ptr(),
-            "<": self.__dec_ptr(),
-            "+": self.__inc_byte(),
-            "-": self.__dec_byte(),
-            ".": self.__output_byte(),
-            ",": self.__input_byte(),
-            "[": self.__jump_forward(),
-            "]": self.__jump_backward()
+            ">": self.__inc_ptr,
+            "<": self.__dec_ptr,
+            "+": self.__inc_byte,
+            "-": self.__dec_byte,
+            ".": self.__output_byte,
+            ",": self.__input_byte,
+            "[": self.__jump_forward,
+            "]": self.__jump_backward
         }
 
         while not self.program.eof():
