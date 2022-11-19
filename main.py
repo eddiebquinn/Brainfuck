@@ -35,6 +35,25 @@ class MemoryBuffer:
         return f"ptr: {self.ptr}, Value:{self.current()}"
 
 
+class Program:
+
+    def __init__(self, program: str):
+        self.program = program
+        self.pos = 0
+
+    def advance(self, n=1):
+        self.pos += n
+
+    def current(self) -> str:
+        return self.program[self.pos]
+
+    def eof(self) -> bool:
+        return self.pos == len(self.program)
+
+    def __str__(self):
+        return f"position: {self.pos}, Command: {self.current()}"
+
+
 def execute(file):
     f = open(file, "r")
     output = evaluate(f.read())
@@ -49,38 +68,36 @@ def evaluate(code):
     loop_map = build_loopMap(code)
     output = []
 
-    mem, codeptr, = MemoryBuffer(), 0
+    mem, program = MemoryBuffer(), Program(code)
 
-    while codeptr < len(code):
-        command = code[codeptr]
-        print(command)
+    while not program.eof():
 
-        if command == ">":
+        if program.current() == ">":
             mem.increment_ptr()
 
-        if command == "<":
+        if program.current() == "<":
             mem.decrement_ptr()
 
-        if command == "+":
+        if program.current() == "+":
             mem.increment()
 
-        if command == "-":
+        if program.current() == "-":
             mem.decrement()
 
-        if command == "[" and mem.current() == 0:
-            codeptr = loop_map[codeptr]
+        if program.current() == "[" and mem.current() == 0:
+            program.pos = loop_map[program.pos]
 
-        if command == "]" and mem.current() != 0:
-            codeptr = loop_map[codeptr]
+        if program.current() == "]" and mem.current() != 0:
+            program.pos = loop_map[program.pos]
 
-        if command == ".":
+        if program.current() == ".":
             output.append(chr(mem.current()))
 
-        if command == ",":
+        if program.current() == ",":
             i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
             mem.store(i)
 
-        codeptr += 1
+        program.advance()
 
     return output
 
