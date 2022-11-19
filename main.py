@@ -54,6 +54,61 @@ class Program:
         return f"position: {self.pos}, Command: {self.current()}"
 
 
+class Interpreter:
+
+    def __init__(self, program: Program, buffer: MemoryBuffer, loop_map: dict):
+        self.program = program
+        self.mem = buffer
+        self.loop_map = loop_map
+
+        self.output = []
+
+    def __inc_ptr(self):
+        self.mem.increment_ptr()
+
+    def __dec_ptr(self):
+        self.mem.decrement_ptr()
+
+    def __inc_byte(self):
+        self.mem.increment()
+
+    def __dec_byte(self):
+        self.mem.decrement()
+
+    def __jump_forward(self):
+        self.program.pos = self.loop_map[self.program.pos]
+
+    def __jump_backward(self):
+        self.program.pos = self.loop_map[program.pos]
+
+    def __output_byte(self):
+        self.output.append(chr(self.mem.current()))
+
+    def __input_byte(self):
+        i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
+        self.mem.store(i)
+
+    def evaluate(self):
+        cmd_dict = {
+            ">": self.__inc_ptr(),
+            "<": self.__dec_ptr(),
+            "+": self.__inc_byte(),
+            "-": self.__dec_byte(),
+            ".": self.__output_byte(),
+            ",": self.__input_byte(),
+            "[": self.__jump_forward(),
+            "]": self.__jump_backward()
+        }
+
+        while not self.program.eof():
+            cmd = cmd_dict.get(self.program.current())
+            if cmd:
+                cmd()
+            self.program.advance()
+
+        return self.output
+
+
 def execute(file):
     f = open(file, "r")
     output = evaluate(f.read())
@@ -66,38 +121,12 @@ def execute(file):
 def evaluate(code):
     code = cleanup(list(code))
     loop_map = build_loopMap(code)
-    output = []
 
-    mem, program = MemoryBuffer(), Program(code)
-
-    while not program.eof():
-
-        if program.current() == ">":
-            mem.increment_ptr()
-
-        if program.current() == "<":
-            mem.decrement_ptr()
-
-        if program.current() == "+":
-            mem.increment()
-
-        if program.current() == "-":
-            mem.decrement()
-
-        if program.current() == "[" and mem.current() == 0:
-            program.pos = loop_map[program.pos]
-
-        if program.current() == "]" and mem.current() != 0:
-            program.pos = loop_map[program.pos]
-
-        if program.current() == ".":
-            output.append(chr(mem.current()))
-
-        if program.current() == ",":
-            i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
-            mem.store(i)
-
-        program.advance()
+    program = Program(code)
+    buffer = MemoryBuffer(30000)
+    interpreter = Interpreter(
+        program=program, buffer=buffer, loop_map=loop_map)
+    output = interpreter.evaluate()
 
     return output
 
