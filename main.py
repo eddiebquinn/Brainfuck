@@ -76,10 +76,12 @@ class Interpreter:
         self.mem.decrement()
 
     def __jump_forward(self):
-        self.program.pos = self.loop_map[self.program.pos]
+        if self.mem.current() == 0:
+            self.program.pos = self.loop_map[self.program.pos]
 
     def __jump_backward(self):
-        self.program.pos = self.loop_map[program.pos]
+        if self.mem.current() != 0:
+            self.program.pos = self.loop_map[self.program.pos]
 
     def __output_byte(self):
         self.output.append(chr(self.mem.current()))
