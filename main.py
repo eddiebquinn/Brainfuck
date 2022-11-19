@@ -28,10 +28,7 @@ class MemoryBuffer:
     def store(self, val: int):
         self.pool[self.ptr] = val
 
-    def dump(self, start, end) -> list:
-        return self.pool[start:end]
-
-    def __str__(self):
+    def __str__(self) -> str:
         return f"ptr: {self.ptr}, Value:{self.current()}"
 
 
@@ -42,14 +39,14 @@ class Program:
         self.pos = 0
         self.loop_map = self.__build_loop_map()
 
-    def __extract_code(self, file):
+    def __extract_code(self, file) -> str:
         f = open(file, "r")
         code = "".join(x for x in f.read() if x in [
             '.', ',', '[', ']', '<', '>', '+', '-'])
         f.close()
         return code
 
-    def __build_loop_map(self):
+    def __build_loop_map(self) -> dict:
         # This is also a error point because it doesnt know how to cope with nested loops
         temp_loopstack, loopmap = [], {}
         for position, command in enumerate(self.program):
@@ -70,7 +67,7 @@ class Program:
     def eof(self) -> bool:
         return self.pos == len(self.program)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"position: {self.pos}, Command: {self.current()}"
 
 
@@ -109,7 +106,7 @@ class Interpreter:
         i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
         self.mem.store(i)
 
-    def evaluate(self):
+    def evaluate(self) -> list:
         cmd_dict = {
             ">": self.__inc_ptr,
             "<": self.__dec_ptr,
@@ -127,7 +124,7 @@ class Interpreter:
                 cmd()
             self.program.advance()
 
-        return self.output
+        return "".join(x for x in self.output)
 
 
 def main():
@@ -140,7 +137,6 @@ def main():
     interpreter = Interpreter(program=program, buffer=buffer)
     output = interpreter.evaluate()
 
-    output = "".join(x for x in output)
     print(output)
 
 
