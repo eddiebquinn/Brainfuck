@@ -1,4 +1,4 @@
 # Brainfuck
 Brainfuck is an esoteric programming language created in 1993 by Urban Müller. Notable for its extreme minimalism, the language consists of only eight simple commands, a data pointer and an instruction pointer. While it is fully Turing complete, it is not intended for practical use, but to challenge and amuse programmers. One of the first hackathons I ever took part in requires us to code a Brainfuck interpreter in less than 1h. While my team failed, I felt we did come up with a good solution to it. Rather than dealing with the problem via a series of `if` statements, given the predictable nature of Brainfuck we decided to use a dictionary that maps the various commands to a series of functions.
 
-This is the completed version of the Brainfuck interpreter (there are still improvements that can be made however)
+This is the completed version of the Brainfuck interpreter (there are still improvements that can be made, however)
