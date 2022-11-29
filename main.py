@@ -82,8 +82,7 @@ class Interpreter:
     def __jump_forward(self):
         # The jump forward and backward method can be improved, these two methods
         # are simmilar enough they can become one method
-        val = self.mem.current()
-        if val == 0:
+        if self.mem.current() == 0:
             count = 1
             while count:
                 self.program.advance()
