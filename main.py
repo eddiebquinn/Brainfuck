@@ -108,7 +108,7 @@ class Interpreter:
         i = input("PLEASE INSERT CHARCTER YOU WANT TO INSERT INTO MEMORY -")
         self.mem.store(i)
 
-    def evaluate(self) -> list:
+    def evaluate(self) -> str:
         cmd_dict = {
             ">": self.__inc_ptr,
             "<": self.__dec_ptr,
