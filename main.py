@@ -26,6 +26,7 @@ class MemoryBuffer:
         return self.pool[self.ptr]
 
     def store(self, val: int):
+        # This does not validate the input, needs improvement
         self.pool[self.ptr] = val
 
     def __str__(self) -> str:
