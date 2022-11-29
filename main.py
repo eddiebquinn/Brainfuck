@@ -79,6 +79,8 @@ class Interpreter:
         self.mem.decrement()
 
     def __jump_forward(self):
+        # The jump forward and backward method can be improved, these two methods
+        # are simmilar enough they can become one method
         val = self.mem.current()
         if val == 0:
             count = 1
