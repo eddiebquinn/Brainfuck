@@ -8,8 +8,8 @@ class MemoryBuffer:
         self.ptr = 0
 
     def increment_ptr(self):
-        # Potential error point if ptr goes beyond array
-        self.ptr += 1
+        self.ptr = len(self.pool) if self.ptr >= len(
+            self.pool) else self.ptr + 1
 
     def decrement_ptr(self):
         self.ptr = 0 if self.ptr <= 0 else self.ptr - 1
