@@ -37,7 +37,6 @@ class Program:
     def __init__(self, program: str):
         self.program = self.__extract_code(program)
         self.pos = 0
-        self.loop_map = self.__build_loop_map()
 
     def __extract_code(self, file) -> str:
         f = open(file, "r")
@@ -45,18 +44,6 @@ class Program:
             '.', ',', '[', ']', '<', '>', '+', '-'])
         f.close()
         return code
-
-    def __build_loop_map(self) -> dict:
-        # This is also a error point because it doesnt know how to cope with nested loops
-        temp_loopstack, loopmap = [], {}
-        for position, command in enumerate(self.program):
-            if command == "[":
-                temp_loopstack.append(position)
-            if command == "]":
-                start = temp_loopstack.pop()
-                loopmap[start] = position
-                loopmap[position] = start
-        return loopmap
 
     def advance(self, n=1):
         self.pos += n
@@ -92,12 +79,25 @@ class Interpreter:
         self.mem.decrement()
 
     def __jump_forward(self):
-        if self.mem.current() == 0:
-            self.program.pos = self.program.loop_map[self.program.pos]
+        val = self.mem.current()
+        if val == 0:
+            count = 1
+            while count:
+                self.program.advance()
+                if self.program.current() == "[":
+                    count += 1
+                if self.program.current() == "]":
+                    count -= 1
 
     def __jump_backward(self):
         if self.mem.current() != 0:
-            self.program.pos = self.program.loop_map[self.program.pos]
+            count = 1
+            while count:
+                self.program.advance(-1)
+                if self.program.current() == "]":
+                    count += 1
+                if self.program.current() == "[":
+                    count -= 1
 
     def __output_byte(self):
         self.output.append(chr(self.mem.current()))
