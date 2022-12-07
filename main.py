@@ -80,26 +80,19 @@ class Interpreter:
         self.mem.decrement()
 
     def __jump_forward(self):
-        # The jump forward and backward method can be improved, these two methods
-        # are simmilar enough they can become one method
-        if self.mem.current() == 0:
-            count = 1
-            while count:
-                self.program.advance()
-                if self.program.current() == "[":
-                    count += 1
-                if self.program.current() == "]":
-                    count -= 1
+        self.__handle_jump((1, "[", "]"))
 
     def __jump_backward(self):
-        if self.mem.current() != 0:
-            count = 1
-            while count:
-                self.program.advance(-1)
-                if self.program.current() == "]":
-                    count += 1
-                if self.program.current() == "[":
-                    count -= 1
+        self.__handle_jump((-1, "]", "["))
+
+    def __handle_jump(self, params:tuple):
+        count = 1
+        while count:
+            self.program.advance(params[0])
+            if self.program.current() == params[1]:
+                count += 1
+            if self.program.current() == params[2]:
+                count -= 1
 
     def __output_byte(self):
         self.output.append(chr(self.mem.current()))
