@@ -80,21 +80,20 @@ class Interpreter:
         self.mem.decrement()
 
     def __jump_forward(self):
-        if self.mem.current() == 0:
-            self.__handle_jump((1, "[", "]"))
+        self.__handle_jump((lambda: self.mem.current() == 0,1, "[", "]"))
 
     def __jump_backward(self):
-        if self.mem.current() != 0:
-            self.__handle_jump((-1, "]", "["))
+        self.__handle_jump((lambda: self.mem.current() != 0, -1, "]", "["))
 
     def __handle_jump(self, params:tuple):
-        count = 1
-        while count:
-            self.program.advance(params[0])
-            if self.program.current() == params[1]:
-                count += 1
-            if self.program.current() == params[2]:
-                count -= 1
+        if params[0]():
+            count = 1
+            while count:
+                self.program.advance(params[1])
+                if self.program.current() == params[2]:
+                    count += 1
+                if self.program.current() == params[3]:
+                    count -= 1
 
     def __output_byte(self):
         self.output.append(chr(self.mem.current()))
