@@ -80,19 +80,19 @@ class Interpreter:
         self.mem.decrement()
 
     def __jump_forward(self):
-        self.__handle_jump((lambda: self.mem.current() == 0,1, "[", "]"))
+        self.__handle_jump({"check":lambda: self.mem.current() == 0, "direction": 1, "bracketOrder":("[", "]")})
 
     def __jump_backward(self):
-        self.__handle_jump((lambda: self.mem.current() != 0, -1, "]", "["))
+        self.__handle_jump({"check":lambda: self.mem.current() != 0, "direction": -1, "bracketOrder": ("]", "[")})
 
-    def __handle_jump(self, params:tuple):
-        if params[0]():
+    def __handle_jump(self, params:dict):
+        if params["check"]():
             count = 1
             while count:
-                self.program.advance(params[1])
-                if self.program.current() == params[2]:
+                self.program.advance(params["direction"])
+                if self.program.current() == params["bracketOrder"][0]:
                     count += 1
-                if self.program.current() == params[3]:
+                if self.program.current() == params["bracketOrder"][1]:
                     count -= 1
 
     def __output_byte(self):
