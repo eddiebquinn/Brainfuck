@@ -80,10 +80,12 @@ class Interpreter:
         self.mem.decrement()
 
     def __jump_forward(self):
-        self.__handle_jump((1, "[", "]"))
+        if self.mem.current() == 0:
+            self.__handle_jump((1, "[", "]"))
 
     def __jump_backward(self):
-        self.__handle_jump((-1, "]", "["))
+        if self.mem.current() != 0:
+            self.__handle_jump((-1, "]", "["))
 
     def __handle_jump(self, params:tuple):
         count = 1
